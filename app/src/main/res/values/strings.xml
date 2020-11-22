@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">FirestoreChat</string>
+    <string name="_new">New</string>
+    <string name="send_message">Send Message</string>
+</resources>
