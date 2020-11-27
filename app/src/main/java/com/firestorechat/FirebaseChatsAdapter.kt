@@ -2,7 +2,9 @@ package com.firestorechat
 
 import android.content.Context
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.firestorechat.databinding.ExpertChatItemReceivedBinding
@@ -14,9 +16,7 @@ class FirebaseChatsAdapter(
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     var userId: Int = 0
-        set(value) {
-            notifyDataSetChanged()
-        }
+
 
     val inflator = LayoutInflater.from(context)
     val VIEW_TYPE_USER = 1
@@ -27,6 +27,10 @@ class FirebaseChatsAdapter(
         RecyclerView.ViewHolder(binding.root) {
 
         fun setupData(data: ChatModel.ChatMessage) {
+
+            binding.tvMessage.background = ContextCompat.getDrawable(context,R.drawable.corner_16dp) //R.drawable.corner_16dp
+            binding.newSepLayout.visibility = View.GONE
+
             binding.tvMessage.text = data.message
         }
     }
@@ -34,6 +38,8 @@ class FirebaseChatsAdapter(
     inner class VHReceiver(val binding: ExpertChatItemReceivedBinding) :
         RecyclerView.ViewHolder(binding.root) {
         fun setupData(data: ChatModel.ChatMessage) {
+            binding.newSepLayout.visibility = View.GONE
+            binding.detailsLayout.visibility = View.GONE
             binding.tvMessage.text = data.message
         }
     }
@@ -69,7 +75,6 @@ class FirebaseChatsAdapter(
             (holder as VHSender).setupData(listData[position])
         } else {
             (holder as VHReceiver).setupData(listData[position])
-
         }
     }
 }

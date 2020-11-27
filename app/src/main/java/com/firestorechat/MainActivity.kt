@@ -36,13 +36,13 @@ class MainActivity : AppCompatActivity() {
             etAnotherUserId.setText(2.toString())
 
             adapter = FirebaseChatsAdapter(this@MainActivity, listChats)
+            adapter.userId = userId
             recyclerView.adapter = adapter
             recyclerView.layoutManager = LinearLayoutManager(this@MainActivity)
         }
         db = Firebase.firestore
 
         chatReference = initiateChat()
-        adapter.userId = userId
         initChatListener()
 
         setupClickListeners()
@@ -54,21 +54,23 @@ class MainActivity : AppCompatActivity() {
         chatReference?.collection(MESSAGES_NODE)
             ?.addSnapshotListener(object : EventListener<QuerySnapshot> {
                 override fun onEvent(value: QuerySnapshot?, error: FirebaseFirestoreException?) {
-                    Toast.makeText(this@MainActivity, "onEvent called!", Toast.LENGTH_SHORT).show()
+                    showMessage("onEvent called!")
                     listChats.clear()
 
 
 
                     value?.toObjects(ChatModel.ChatMessage::class.java)?.let {
+
+                        it.sortBy { it.timestamp }
                         listChats.addAll(it)
                     }
 
-                   /* value?.documents?.forEach { document ->
-                        if (document.exists()) {
+                    /* value?.documents?.forEach { document ->
+                         if (document.exists()) {
 
-                            Toast.makeText(this@MainActivity, "onEvent called! for id : ${?.chatId}", Toast.LENGTH_SHORT).show()
+                             Toast.makeText(this@MainActivity, "onEvent called! for id : ${?.chatId}", Toast.LENGTH_SHORT).show()
 
-                           *//* document.toObject(ChatModel.ChatMessage::class.java)?.let {
+                            *//* document.toObject(ChatModel.ChatMessage::class.java)?.let {
                                 listChats.add(it)
 
                             }*//*
@@ -76,6 +78,8 @@ class MainActivity : AppCompatActivity() {
                     }*/
 
                     adapter.notifyDataSetChanged()
+                    binding?.recyclerView?.scrollToPosition(listChats.size - 1)
+
                 }
 
             })
@@ -87,28 +91,17 @@ class MainActivity : AppCompatActivity() {
                 chatReference = initiateChat()
 
                 if (chatReference != null) {
-                    Toast.makeText(
-                        this@MainActivity,
-                        "Chat Initiated Successfully",
-                        Toast.LENGTH_SHORT
-                    ).show()
-
+                    showMessage("Chat Initiated Successfully")
                     adapter.userId = userId
                 } else {
-                    Toast.makeText(this@MainActivity, "Chat Initiation failed!", Toast.LENGTH_SHORT)
-                        .show()
+                    showMessage("Chat Initiation failed!")
                 }
             }
 
             btnSend.setOnClickListener {
 
                 if (chatReference == null) {
-                    Toast.makeText(
-                        this@MainActivity,
-                        "Please initiate the chat",
-                        Toast.LENGTH_SHORT
-                    )
-                        .show()
+                    showMessage("Please initiate the chat")
                 }
 
                 sendChatMessage(etMessage.text.toString())
@@ -151,17 +144,16 @@ class MainActivity : AppCompatActivity() {
         val message = ChatModel.ChatMessage(chatId, userId, System.currentTimeMillis(), message)
 
         chatReference?.update(LAST_MESSAGE_NODE, message)
+        listChats.add(message)
+        adapter.notifyDataSetChanged()
         chatReference?.collection(MESSAGES_NODE)?.add(message)?.addOnSuccessListener { document ->
 
-            Toast.makeText(this, "Send btn On Success Called..", Toast.LENGTH_SHORT).show()
-            listChats.add(message)
-            adapter.notifyDataSetChanged()
+            binding?.recyclerView?.scrollToPosition(listChats.size - 1)
+
 
         }?.addOnFailureListener {
-            Toast.makeText(this, "Send btn On Failed Called..", Toast.LENGTH_SHORT).show()
-
+            showMessage("Send btn On Failed Called..")
         }
-
 
         binding?.etMessage?.setText("")
     }
@@ -175,5 +167,9 @@ class MainActivity : AppCompatActivity() {
         binding = null
         super.onDestroy()
 
+    }
+
+    fun showMessage(msg: String) {
+       // Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
     }
 }
